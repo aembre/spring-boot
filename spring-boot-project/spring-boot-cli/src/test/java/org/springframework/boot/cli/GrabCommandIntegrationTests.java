@@ -44,13 +44,13 @@ class GrabCommandIntegrationTests {
 	@RegisterExtension
 	CliTester cli;
 
-	GrabCommandIntegrationTests(CapturedOutput capturedOutput) {
-		this.cli = new CliTester("src/test/resources/grab-samples/", capturedOutput);
+	GrabCommandIntegrationTests(CapturedOutput output) {
+		this.cli = new CliTester("src/test/resources/grab-samples/", output);
 	}
 
 	@BeforeEach
 	@AfterEach
-	public void deleteLocalRepository() {
+	void deleteLocalRepository() {
 		System.clearProperty("grape.root");
 		System.clearProperty("groovy.grape.report.downloads");
 	}

@@ -60,7 +60,7 @@ class FreeMarkerAutoConfigurationServletIntegrationTests {
 	private AnnotationConfigServletWebApplicationContext context;
 
 	@AfterEach
-	public void close() {
+	void close() {
 		if (this.context != null) {
 			this.context.close();
 		}
@@ -221,7 +221,7 @@ class FreeMarkerAutoConfigurationServletIntegrationTests {
 	static class FilterRegistrationResourceConfiguration {
 
 		@Bean
-		public FilterRegistrationBean<ResourceUrlEncodingFilter> filterRegistration() {
+		FilterRegistrationBean<ResourceUrlEncodingFilter> filterRegistration() {
 			FilterRegistrationBean<ResourceUrlEncodingFilter> bean = new FilterRegistrationBean<>(
 					new ResourceUrlEncodingFilter());
 			bean.setDispatcherTypes(EnumSet.of(DispatcherType.INCLUDE));
@@ -235,7 +235,7 @@ class FreeMarkerAutoConfigurationServletIntegrationTests {
 	static class FilterRegistrationOtherConfiguration {
 
 		@Bean
-		public FilterRegistrationBean<OrderedCharacterEncodingFilter> filterRegistration() {
+		FilterRegistrationBean<OrderedCharacterEncodingFilter> filterRegistration() {
 			return new FilterRegistrationBean<>(new OrderedCharacterEncodingFilter());
 		}
 

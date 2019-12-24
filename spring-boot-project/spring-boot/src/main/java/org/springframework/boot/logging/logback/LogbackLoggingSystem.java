@@ -61,6 +61,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Andy Wilkinson
  * @author Ben Hale
+ * @since 1.0.0
  */
 public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 
@@ -119,7 +120,7 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 		markAsInitialized(loggerContext);
 		if (StringUtils.hasText(System.getProperty(CONFIGURATION_FILE_PROPERTY))) {
 			getLogger(LogbackLoggingSystem.class.getName()).warn("Ignoring '" + CONFIGURATION_FILE_PROPERTY
-					+ "' system property. " + "Please use 'logging.config' instead.");
+					+ "' system property. Please use 'logging.config' instead.");
 		}
 	}
 
@@ -138,6 +139,8 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 				environment.resolvePlaceholders("${logging.pattern.level:${LOG_LEVEL_PATTERN:%5p}}"));
 		context.putProperty(LoggingSystemProperties.LOG_DATEFORMAT_PATTERN, environment.resolvePlaceholders(
 				"${logging.pattern.dateformat:${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}"));
+		context.putProperty(LoggingSystemProperties.ROLLING_FILE_NAME_PATTERN, environment
+				.resolvePlaceholders("${logging.pattern.rolling-file-name:${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz}"));
 		new DefaultLogbackConfiguration(initializationContext, logFile).apply(configurator);
 		context.setPackagingDataEnabled(true);
 	}
@@ -271,7 +274,6 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 			name = Logger.ROOT_LOGGER_NAME;
 		}
 		return factory.getLogger(name);
-
 	}
 
 	private LoggerContext getLoggerContext() {

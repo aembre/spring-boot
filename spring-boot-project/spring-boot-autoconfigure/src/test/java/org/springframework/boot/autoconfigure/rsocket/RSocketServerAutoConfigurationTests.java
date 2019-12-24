@@ -19,8 +19,10 @@ package org.springframework.boot.autoconfigure.rsocket;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.rsocket.server.RSocketServerBootstrap;
+import org.springframework.boot.rsocket.context.RSocketPortInfoApplicationContextInitializer;
+import org.springframework.boot.rsocket.context.RSocketServerBootstrap;
 import org.springframework.boot.rsocket.server.RSocketServerFactory;
+import org.springframework.boot.rsocket.server.ServerRSocketFactoryProcessor;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.ReactiveWebApplicationContextRunner;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -28,15 +30,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.codec.CharSequenceEncoder;
 import org.springframework.core.codec.StringDecoder;
-import org.springframework.messaging.rsocket.MessageHandlerAcceptor;
 import org.springframework.messaging.rsocket.RSocketStrategies;
+import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link RSocketServerAutoConfiguration}.
  *
  * @author Brian Clozel
+ * @author Verónica Vásquez
  */
 class RSocketServerAutoConfigurationTests {
 
@@ -74,7 +78,34 @@ class RSocketServerAutoConfigurationTests {
 	void shouldCreateDefaultBeansForRSocketServerWhenPortIsSet() {
 		reactiveWebContextRunner().withPropertyValues("spring.rsocket.server.port=0")
 				.run((context) -> assertThat(context).hasSingleBean(RSocketServerFactory.class)
-						.hasSingleBean(RSocketServerBootstrap.class));
+						.hasSingleBean(RSocketServerBootstrap.class)
+						.hasSingleBean(ServerRSocketFactoryProcessor.class));
+	}
+
+	@Test
+	void shouldSetLocalServerPortWhenRSocketServerPortIsSet() {
+		reactiveWebContextRunner().withPropertyValues("spring.rsocket.server.port=0")
+				.withInitializer(new RSocketPortInfoApplicationContextInitializer()).run((context) -> {
+					assertThat(context).hasSingleBean(RSocketServerFactory.class)
+							.hasSingleBean(RSocketServerBootstrap.class)
+							.hasSingleBean(ServerRSocketFactoryProcessor.class);
+					assertThat(context.getEnvironment().getProperty("local.rsocket.server.port")).isNotNull();
+				});
+	}
+
+	@Test
+	void shouldUseCustomServerBootstrap() {
+		contextRunner().withUserConfiguration(CustomServerBootstrapConfig.class).run((context) -> assertThat(context)
+				.getBeanNames(RSocketServerBootstrap.class).containsExactly("customServerBootstrap"));
+	}
+
+	@Test
+	void shouldUseCustomNettyRouteProvider() {
+		reactiveWebContextRunner().withUserConfiguration(CustomNettyRouteProviderConfig.class)
+				.withPropertyValues("spring.rsocket.server.transport=websocket",
+						"spring.rsocket.server.mapping-path=/rsocket")
+				.run((context) -> assertThat(context).getBeanNames(RSocketWebSocketNettyRouteProvider.class)
+						.containsExactly("customNettyRouteProvider"));
 	}
 
 	private ApplicationContextRunner contextRunner() {
@@ -91,11 +122,31 @@ class RSocketServerAutoConfigurationTests {
 	static class BaseConfiguration {
 
 		@Bean
-		public MessageHandlerAcceptor messageHandlerAcceptor() {
-			MessageHandlerAcceptor messageHandlerAcceptor = new MessageHandlerAcceptor();
-			messageHandlerAcceptor.setRSocketStrategies(RSocketStrategies.builder()
-					.encoder(CharSequenceEncoder.textPlainOnly()).decoder(StringDecoder.textPlainOnly()).build());
-			return messageHandlerAcceptor;
+		RSocketMessageHandler messageHandler() {
+			RSocketMessageHandler messageHandler = new RSocketMessageHandler();
+			messageHandler.setRSocketStrategies(RSocketStrategies.builder().encoder(CharSequenceEncoder.textPlainOnly())
+					.decoder(StringDecoder.allMimeTypes()).build());
+			return messageHandler;
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class CustomServerBootstrapConfig {
+
+		@Bean
+		RSocketServerBootstrap customServerBootstrap() {
+			return mock(RSocketServerBootstrap.class);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class CustomNettyRouteProviderConfig {
+
+		@Bean
+		RSocketWebSocketNettyRouteProvider customNettyRouteProvider() {
+			return mock(RSocketWebSocketNettyRouteProvider.class);
 		}
 
 	}

@@ -8,17 +8,13 @@ bomr:
         - 'type: dependency-upgrade'
     policy: same-major-version
     prohibited:
-      - project: maven-invoker-plugin
-        versions:
-          # NPE in InstallMojo.installProjectPom (InstallMojo.java:387)
-          - '[3.2.0]'
       - project: derby
         versions:
           # 10.15 requires Java 9
           - '[10.15,)'
   verify:
     ignored-dependencies:
-      # Avoid confliciting transitive requirements for
+      # Avoid conflicting transitive requirements for
       # io.grpc:grpc-core:jar:[1.0.1,1.0.1] (Jetty),
       # io.grpc:grpc-core:jar:[1.14.0,1.14.0] (Micrometer's Azure Registry), and
       # io.grpc:grpc-core:jar:[1.15.0,1.15.0] (Micrometer's Stackdriver Registry)

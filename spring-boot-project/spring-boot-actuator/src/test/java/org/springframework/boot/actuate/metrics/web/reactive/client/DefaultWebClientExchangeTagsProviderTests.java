@@ -50,11 +50,11 @@ class DefaultWebClientExchangeTagsProviderTests {
 	private ClientResponse response;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		this.request = ClientRequest.create(HttpMethod.GET, URI.create("https://example.org/projects/spring-boot"))
 				.attribute(URI_TEMPLATE_ATTRIBUTE, "https://example.org/projects/{project}").build();
 		this.response = mock(ClientResponse.class);
-		given(this.response.statusCode()).willReturn(HttpStatus.OK);
+		given(this.response.rawStatusCode()).willReturn(HttpStatus.OK.value());
 	}
 
 	@Test
